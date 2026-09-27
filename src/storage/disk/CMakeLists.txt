@@ -1,0 +1,1 @@
+minitub_add_module(minitub_storage_disk disk_manager.cpp disk_scheduler.cpp)

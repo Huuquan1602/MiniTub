@@ -16,7 +16,7 @@ add_executable(minitub_bench
 minitub_target(minitub_bench)
 add_dependencies(minitub_bench minitub_git_version)
 target_include_directories(minitub_bench PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR}/generated)
-target_link_libraries(minitub_bench PRIVATE minitub_common hdr_histogram_static CLI11::CLI11)
+target_link_libraries(minitub_bench PRIVATE minitub hdr_histogram_static CLI11::CLI11)
 target_compile_definitions(minitub_bench PRIVATE
   MINITUB_BUILD_TYPE="${CMAKE_BUILD_TYPE}" MINITUB_SANITIZER_NAME="${MINITUB_SANITIZER}")
 

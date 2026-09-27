@@ -12,7 +12,7 @@
 
 #include <gtest/gtest.h>
 
-#include "storage/disk/channel.h"
+#include "common/channel.h"
 #include "storage/disk/disk_manager.h"
 #include "test_util.h"
 

@@ -18,24 +18,22 @@ The component diagram lives in [architectures.md](architectures.md).
 ```
 cmake/          build helpers (warnings, sanitizers, dependencies, git version)
 configs/        TOML engine configs (default.toml)
-src/common/     shared types: config.h, macros.h, rid.h, exception.h, engine_config.*
-src/storage/
-  disk/         disk_manager, channel, disk_scheduler (M1)
-  page/         page, page_guard (M1), table_page (M2)
-  table/        table_heap (M2)
-  index/        B+ tree (M3), extendible hash (M4)
-src/buffer/     replacer, lru_k_replacer, buffer_pool_manager (M1)
-src/catalog/    catalog (M5)
-src/execution/  Volcano executors (M5)
-src/sql/        parser, binder, planner, optimizer (M6, M7)
-src/concurrency/ MVCC transactions (M8)
-src/recovery/   WAL + ARIES (M9)
+src/include/    ALL headers, one folder per module (BusTub layout):
+  common/        config.h, macros.h, rid.h, exception.h, channel.h, engine_config*.h
+  storage/disk/  disk_manager.h, disk_scheduler.h (M1)
+  storage/page/  page.h, page_guard.h (M1), table_page.h (M2)
+  buffer/        replacer.h, lru_k_replacer.h, buffer_pool_manager.h (M1)
+src/<module>/   the matching .cpp files: common/, storage/disk/, storage/page/, buffer/,
+                later storage/table/ (M2), storage/index/ (M3, M4), catalog/ + execution/ (M5),
+                sql/ (M6, M7), concurrency/ (M8), recovery/ (M9)
 test/           mirrors src/ (test/common/..., test/buffer/...)
 bench/          minitub_bench harness, workloads/, micro/, sweep.py, plot.py
 docs/           design.md, ROADMAP.md, plans/, adr/
 milestones/     per-milestone journals (M0-setup.md, ...)
 ```
 
+Includes are written from `src/include`, e.g. `#include "buffer/buffer_pool_manager.h"`.
+Each `src/<module>/` builds an OBJECT library; all of them form one static library, `minitub`.
 A directory is created by the milestone that first needs it.
 
 ## 3. Build and tooling
@@ -107,7 +105,7 @@ Headers are the contract; the tests in `test/storage/` and `test/buffer/` check
 exactly the rules below. A guided tour of every file and function (in Vietnamese) is in
 [architecture-m1.md](architecture-m1.md). All I/O errors throw `Exception(ExceptionType::Io)`.
 
-### 7.1 DiskManager (`src/storage/disk/disk_manager.h`)
+### 7.1 DiskManager (`src/include/storage/disk/disk_manager.h`)
 
 ```cpp
 DiskManager(const std::filesystem::path &file, IoMode mode = IoMode::Buffered);
@@ -130,7 +128,7 @@ auto GetStats() const -> DiskStats;   // {reads, writes}
 - Thread-safe: several scheduler workers may call it at once.
 - Counters: `reads`/`writes` = number of `ReadPage`/`WritePage` calls.
 
-### 7.2 Channel and DiskScheduler (`src/storage/disk/channel.h`, `disk_scheduler.h`)
+### 7.2 Channel and DiskScheduler (`src/include/common/channel.h`, `src/include/storage/disk/disk_scheduler.h`)
 
 ```cpp
 template <typename T> class Channel { void Put(T v); auto Get() -> T; };
@@ -150,14 +148,14 @@ void Schedule(DiskRequest r);
 - The destructor finishes every request already scheduled, then stops and joins
   the workers (one `std::nullopt` per worker channel as the stop signal).
 
-### 7.3 Page (`src/storage/page/page.h`)
+### 7.3 Page (`src/include/storage/page/page.h`)
 
 A frame of the buffer pool: `alignas(PAGE_SIZE)` data, `page_id`, `pin_count`,
 `is_dirty`, `page_lsn` (unused until M9), and a reader/writer latch
 (`RLatch/RUnlatch/WLatch/WUnlatch`). Accessors are trivial; only
 `BufferPoolManager` (a friend) changes the metadata, under its own latch.
 
-### 7.4 Replacer and LRUKReplacer (`src/buffer/replacer.h`, `lru_k_replacer.h`)
+### 7.4 Replacer and LRUKReplacer (`src/include/buffer/replacer.h`, `lru_k_replacer.h`)
 
 ```cpp
 LRUKReplacer(size_t num_frames, size_t k);
@@ -184,7 +182,7 @@ auto Size() const -> size_t;
 - `RecordAccess`/`SetEvictable`/`Remove` with `f < 0` or `f >= num_frames` throw `OutOfRange`.
 - `Size()` = number of evictable frames. All methods are thread-safe.
 
-### 7.5 BufferPoolManager (`src/buffer/buffer_pool_manager.h`)
+### 7.5 BufferPoolManager (`src/include/buffer/buffer_pool_manager.h`)
 
 ```cpp
 BufferPoolManager(size_t pool_size, DiskManager *dm, size_t replacer_k = 2, int disk_workers = 1);
@@ -220,7 +218,7 @@ auto GetStats() const -> BufferPoolStats;        // {hits, misses, evictions}
 - Counters: `hits`/`misses` per `FetchPage`; `evictions` per frame taken from the replacer.
 - Thread-safe.
 
-### 7.6 Page guards (`src/storage/page/page_guard.h`)
+### 7.6 Page guards (`src/include/storage/page/page_guard.h`)
 
 RAII holders of a pinned page. Move-only; a moved-from guard is empty and does
 nothing. `Drop()` releases early and is idempotent; the destructor calls it.

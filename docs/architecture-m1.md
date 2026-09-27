@@ -17,12 +17,17 @@ Tài liệu giải thích **từng file, từng hàm** của M1 và cách chúng
 | Ai dùng | File khác `#include` nó để biết có những gì mà gọi | Compiler dịch thành `.o`, linker ghép vào thư viện/binary |
 | Trong M1 | Tôi viết sẵn, **bạn không cần sửa** (trừ phần `private:` có `TODO(M1)`) | Hiện là stub `throw NotImplemented`, **bạn viết thân hàm** |
 
+**Tổ chức thư mục (giống BusTub):** mọi header nằm trong `src/include/<module>/`, file `.cpp`
+tương ứng nằm ở `src/<module>/`. Ví dụ `src/include/buffer/lru_k_replacer.h` đi với `src/buffer/lru_k_replacer.cpp`.
+Khi include luôn viết đường dẫn tính từ `src/include`: `#include "buffer/lru_k_replacer.h"`.
+Trong tài liệu này, đường dẫn `include/...` nghĩa là `src/include/...`, còn `buffer/...` nghĩa là `src/buffer/...`.
+
 Vì sao tách đôi:
 - **Biên dịch nhanh:** sửa `.cpp` thì chỉ file đó dịch lại; sửa `.h` thì mọi file include nó đều dịch lại.
 - **Tách interface khỏi implementation:** test chỉ phụ thuộc vào `.h`, nên bạn đổi cách làm bên trong thoải mái mà test không cần đổi.
 - **Ẩn chi tiết:** code dùng `BufferPoolManager` không cần biết bên trong nó có hash map hay list.
 
-Ngoại lệ: **`channel.h` không có `.cpp`**. `Channel<T>` là *template*, mà compiler phải thấy thân hàm template ở chỗ dùng, nên toàn bộ code template nằm trong header.
+Ngoại lệ: **`common/channel.h` không có `.cpp`**. `Channel<T>` là *template*, mà compiler phải thấy thân hàm template ở chỗ dùng, nên toàn bộ code template nằm trong header.
 
 Phần `private:` trong header là nơi bạn **tự khai báo biến thành viên** (mutex, hash map, vector frame, ...). Đó là quyết định thiết kế của bạn, nên tôi để trống với `// TODO(M1)`.
 
@@ -38,7 +43,7 @@ flowchart TD
     Frames["Frames: mảng Page<br/>storage/page/page.h"]
     Rep["LRUKReplacer<br/>buffer/lru_k_replacer.h"]
     Sched["DiskScheduler<br/>storage/disk/disk_scheduler.h"]
-    Chan["Channel&lt;T&gt;<br/>storage/disk/channel.h"]
+    Chan["Channel&lt;T&gt;<br/>common/channel.h"]
     DM["DiskManager<br/>storage/disk/disk_manager.h"]
     File[("minitub.db<br/>file trên disk")]
 
@@ -84,7 +89,7 @@ Mỗi tầng chỉ nói chuyện với tầng ngay dưới nó:
 
 ## 4. Từng file, từng hàm
 
-### 4.1 `src/storage/disk/disk_manager.h` và `.cpp`: đọc/ghi page trên file
+### 4.1 `include/storage/disk/disk_manager.h` + `storage/disk/disk_manager.cpp`: đọc/ghi page trên file
 
 **Vai trò:** tầng thấp nhất. Đổi `page_id` thành vị trí trong file (`page_id * PAGE_SIZE`) rồi đọc/ghi đúng 4096 byte ở đó.
 
@@ -107,7 +112,7 @@ Mỗi tầng chỉ nói chuyện với tầng ngay dưới nó:
 
 ---
 
-### 4.2 `src/storage/disk/channel.h`: hàng đợi giữa các thread
+### 4.2 `include/common/channel.h`: hàng đợi giữa các thread
 
 **Vai trò:** một hàng đợi FIFO an toàn khi nhiều thread cùng dùng. Scheduler dùng nó để chuyển request từ thread gọi sang thread worker.
 
@@ -122,7 +127,7 @@ Khái niệm cần tìm hiểu: `std::mutex`, `std::condition_variable` (ngủ v
 
 ---
 
-### 4.3 `src/storage/disk/disk_scheduler.h` và `.cpp`: chạy I/O ở background
+### 4.3 `include/storage/disk/disk_scheduler.h` + `storage/disk/disk_scheduler.cpp`: chạy I/O ở background
 
 **Vai trò:** nhận request đọc/ghi và trả về ngay; worker thread làm I/O thật rồi báo kết quả qua `std::promise`.
 
@@ -160,7 +165,7 @@ sequenceDiagram
 
 ---
 
-### 4.4 `src/storage/page/page.h`: một frame trong RAM
+### 4.4 `include/storage/page/page.h`: một frame trong RAM
 
 **Vai trò:** ô chứa dữ liệu của một page cùng thông tin quản lý. BPM tạo sẵn `pool_size` đối tượng `Page` và tái sử dụng chúng mãi.
 
@@ -188,13 +193,13 @@ Hai loại latch **khác nhau**, đừng nhầm:
 
 ---
 
-### 4.5 `src/buffer/replacer.h`: interface chung của thuật toán đuổi
+### 4.5 `include/buffer/replacer.h`: interface chung của thuật toán đuổi
 
 Lớp trừu tượng (toàn hàm `virtual ... = 0`). M1 có một cài đặt là LRU-K. Sau này thêm LRU và Clock cho experiment E1, BPM không cần đổi code nhờ interface này.
 
 ---
 
-### 4.6 `src/buffer/lru_k_replacer.h` và `.cpp`: thuật toán LRU-K
+### 4.6 `include/buffer/lru_k_replacer.h` + `buffer/lru_k_replacer.cpp`: thuật toán LRU-K
 
 **Vai trò:** khi BPM cần một frame, chọn frame nào để đuổi. Replacer chỉ làm việc với **frame id**.
 
@@ -226,7 +231,7 @@ lần thứ 2 gần nhất: frame1 → t0, frame2 → t1, frame3 → t2
 
 ---
 
-### 4.7 `src/buffer/buffer_pool_manager.h` và `.cpp`: bộ não
+### 4.7 `include/buffer/buffer_pool_manager.h` + `buffer/buffer_pool_manager.cpp`: bộ não
 
 **Vai trò:** cache page của disk trong `pool_size` frame. Mọi tầng trên (TableHeap, B+Tree) đọc/ghi page **chỉ thông qua BPM**.
 
@@ -277,7 +282,7 @@ stateDiagram-v2
 
 ---
 
-### 4.8 `src/storage/page/page_guard.h` và `.cpp`: RAII cho page
+### 4.8 `include/storage/page/page_guard.h` + `storage/page/page_guard.cpp`: RAII cho page
 
 **Vấn đề cần giải quyết:** gọi `FetchPage` mà quên `UnpinPage` thì frame bị giữ mãi (rò). Quên `RUnlatch` thì các thread khác kẹt mãi (deadlock).
 
@@ -346,8 +351,8 @@ Mỗi test có comment `// checks:` nói rõ tính chất nó kiểm tra. Chạy
 
 | File | Vai trò |
 |---|---|
-| `src/common/config.h` | `PAGE_SIZE`, kiểu `page_id_t`/`frame_id_t`/`lsn_t`, `INVALID_PAGE_ID` |
-| `src/common/macros.h` | `MT_ASSERT`, `DISALLOW_COPY`, `DISALLOW_COPY_AND_MOVE` |
-| `src/common/exception.h` | `Exception` với `ExceptionType` (`Invalid`, `OutOfRange`, `NotImplemented`, `Config`, `Io`) |
-| `src/common/engine_config.h` | `IoMode`, `ReplacerType`, `pool_size`, ... (bench dùng cho E1/E2) |
-| `src/CMakeLists.txt` | Gom cả M1 thành một thư viện `minitub_storage` (guard và BPM phụ thuộc lẫn nhau nên để chung) |
+| `src/include/common/config.h` | `PAGE_SIZE`, kiểu `page_id_t`/`frame_id_t`/`lsn_t`, `INVALID_PAGE_ID` |
+| `src/include/common/macros.h` | `MT_ASSERT`, `DISALLOW_COPY`, `DISALLOW_COPY_AND_MOVE` |
+| `src/include/common/exception.h` | `Exception` với `ExceptionType` (`Invalid`, `OutOfRange`, `NotImplemented`, `Config`, `Io`) |
+| `src/include/common/engine_config.h` | `IoMode`, `ReplacerType`, `pool_size`, ... (bench dùng cho E1/E2) |
+| `src/CMakeLists.txt` | Mỗi `src/<module>/CMakeLists.txt` tạo một OBJECT library; tất cả gộp thành **một** thư viện `minitub` (giống BusTub) |

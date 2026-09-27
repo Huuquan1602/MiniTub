@@ -3,9 +3,9 @@
 #include <cstddef>
 #include <future>
 
+#include "common/channel.h"
 #include "common/config.h"
 #include "common/macros.h"
-#include "storage/disk/channel.h"
 #include "storage/disk/disk_manager.h"
 
 namespace minitub {
