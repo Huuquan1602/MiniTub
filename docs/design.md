@@ -104,7 +104,8 @@ optional; missing keys keep their defaults.
 ## 7. Storage core interfaces (M1)
 
 Headers are the contract; the tests in `test/storage/` and `test/buffer/` check
-exactly the rules below. All I/O errors throw `Exception(ExceptionType::Io)`.
+exactly the rules below. A guided tour of every file and function (in Vietnamese) is in
+[architecture-m1.md](architecture-m1.md). All I/O errors throw `Exception(ExceptionType::Io)`.
 
 ### 7.1 DiskManager (`src/storage/disk/disk_manager.h`)
 
