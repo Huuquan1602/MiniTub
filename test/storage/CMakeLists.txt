@@ -1,0 +1,3 @@
+minitub_add_test(disk_manager_test disk_manager_test.cpp)
+minitub_add_test(disk_scheduler_test disk_scheduler_test.cpp)
+minitub_add_test(page_guard_test page_guard_test.cpp)
