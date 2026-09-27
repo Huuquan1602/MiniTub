@@ -4,7 +4,7 @@
 
 #include "common/macros.h"
 
-struct hdr_histogram;
+struct hdr_histogram;  // NOLINT(readability-identifier-naming): C library type
 
 namespace minitub::bench {
 

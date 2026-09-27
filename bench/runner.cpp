@@ -16,6 +16,7 @@ auto Run(Workload &workload, const RunOptions &options) -> RunResult {
   std::latch start(options.threads + 1);  // workers + this thread start together
 
   std::vector<std::thread> workers;
+  workers.reserve(options.threads);
   for (int t = 0; t < options.threads; t++) {
     workers.emplace_back([&, t] {
       std::mt19937_64 rng(options.seed + t);  // per-thread seed: reproducible, but threads differ

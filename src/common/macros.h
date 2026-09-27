@@ -26,6 +26,9 @@ namespace minitub::detail {
   } while (false)
 #endif
 
+// Class names cannot be parenthesized, so bugprone-macro-parentheses does not apply.
+// NOLINTBEGIN(bugprone-macro-parentheses)
+
 // Put inside a class body to forbid copying.
 #define DISALLOW_COPY(cname)     \
   cname(const cname &) = delete; \
@@ -36,3 +39,5 @@ namespace minitub::detail {
   DISALLOW_COPY(cname);               \
   cname(cname &&) = delete;           \
   auto operator=(cname &&)->cname & = delete
+
+// NOLINTEND(bugprone-macro-parentheses)

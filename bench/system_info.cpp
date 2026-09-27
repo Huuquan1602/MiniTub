@@ -17,7 +17,7 @@ auto ProcField(const char *path, const std::string &key) -> std::string {
   std::ifstream in(path);
   std::string line;
   while (std::getline(in, line)) {
-    if (line.rfind(key, 0) == 0) {
+    if (line.starts_with(key)) {
       auto colon = line.find(':');
       auto start = line.find_first_not_of(" \t", colon + 1);
       return start == std::string::npos ? "" : line.substr(start);
