@@ -1,0 +1,11 @@
+set(MINITUB_SANITIZER "" CACHE STRING "Sanitizer to build with: address, thread, or empty")
+
+if(MINITUB_SANITIZER STREQUAL "address")
+  add_compile_options(-fsanitize=address -fno-omit-frame-pointer)
+  add_link_options(-fsanitize=address)
+elseif(MINITUB_SANITIZER STREQUAL "thread")
+  add_compile_options(-fsanitize=thread)
+  add_link_options(-fsanitize=thread)
+elseif(NOT MINITUB_SANITIZER STREQUAL "")
+  message(FATAL_ERROR "Unknown MINITUB_SANITIZER '${MINITUB_SANITIZER}'")
+endif()

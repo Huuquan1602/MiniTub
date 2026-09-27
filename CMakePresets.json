@@ -1,0 +1,53 @@
+{
+  "version": 6,
+  "cmakeMinimumRequired": { "major": 3, "minor": 25, "patch": 0 },
+  "configurePresets": [
+    {
+      "name": "base",
+      "hidden": true,
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/${presetName}",
+      "cacheVariables": {
+        "CMAKE_C_COMPILER": "clang",
+        "CMAKE_CXX_COMPILER": "clang++"
+      }
+    },
+    {
+      "name": "debug",
+      "inherits": "base",
+      "displayName": "Debug",
+      "cacheVariables": { "CMAKE_BUILD_TYPE": "Debug" }
+    },
+    {
+      "name": "asan",
+      "inherits": "base",
+      "displayName": "Debug + AddressSanitizer",
+      "cacheVariables": { "CMAKE_BUILD_TYPE": "Debug", "MINITUB_SANITIZER": "address" }
+    },
+    {
+      "name": "tsan",
+      "inherits": "base",
+      "displayName": "Debug + ThreadSanitizer",
+      "cacheVariables": { "CMAKE_BUILD_TYPE": "Debug", "MINITUB_SANITIZER": "thread" }
+    },
+    {
+      "name": "release",
+      "inherits": "base",
+      "displayName": "Release (for benchmarks)",
+      "cacheVariables": { "CMAKE_BUILD_TYPE": "Release" }
+    }
+  ],
+  "buildPresets": [
+    { "name": "debug", "configurePreset": "debug" },
+    { "name": "asan", "configurePreset": "asan" },
+    { "name": "tsan", "configurePreset": "tsan" },
+    { "name": "release", "configurePreset": "release" }
+  ],
+  "testPresets": [
+    { "name": "base", "hidden": true, "output": { "outputOnFailure": true } },
+    { "name": "debug", "inherits": "base", "configurePreset": "debug" },
+    { "name": "asan", "inherits": "base", "configurePreset": "asan" },
+    { "name": "tsan", "inherits": "base", "configurePreset": "tsan" },
+    { "name": "release", "inherits": "base", "configurePreset": "release" }
+  ]
+}
