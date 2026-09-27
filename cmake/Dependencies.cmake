@@ -6,3 +6,7 @@ FetchContent_Declare(googletest SYSTEM
 set(INSTALL_GTEST OFF CACHE BOOL "" FORCE)
 
 FetchContent_MakeAvailable(googletest)
+
+FetchContent_Declare(tomlplusplus SYSTEM
+  URL https://github.com/marzer/tomlplusplus/archive/refs/tags/v3.4.0.tar.gz)
+FetchContent_MakeAvailable(tomlplusplus)

@@ -1,0 +1,24 @@
+# MiniTub engine configuration: every key, set to its default value.
+# All keys are optional. See docs/design.md section 6.
+
+[storage]
+db_file = "minitub.db"
+log_file = "minitub.log"
+io_mode = "buffered"          # buffered | direct
+disk_scheduler_workers = 1
+
+[buffer_pool]
+pool_size = 1024              # frames of PAGE_SIZE bytes
+replacer = "lru_k"            # lru | lru_k | clock
+lru_k = 2
+
+[index]
+default_type = "bplus_tree"   # bplus_tree | extendible_hash
+
+[transaction]
+isolation = "snapshot"        # snapshot | serializable
+
+[wal]
+enabled = false
+flush_policy = "group_commit" # every_commit | group_commit
+group_commit_interval_us = 1000
