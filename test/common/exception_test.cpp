@@ -16,6 +16,8 @@ TEST(ExceptionTest, CarriesTypeInMessage) {
   EXPECT_STREQ(e.what(), "Config: unknown key 'x'");
 }
 
+TEST(ExceptionTest, IoTypeName) { EXPECT_STREQ(Exception(ExceptionType::Io, "disk full").what(), "Io: disk full"); }
+
 TEST(ExceptionTest, CatchableAsStdException) {
   EXPECT_THROW(throw Exception(ExceptionType::NotImplemented, "later"), std::runtime_error);
 }
