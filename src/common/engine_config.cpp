@@ -39,9 +39,7 @@ auto NameOf(const EnumNames<E, N> &names, E value) -> std::string_view {
 
 [[noreturn]] void Fail(const std::string &message) { throw Exception(ExceptionType::Config, message); }
 
-auto Where(const toml::node &node) -> std::string {
-  return " (line " + std::to_string(node.source().begin.line) + ")";
-}
+auto Where(const toml::node &node) -> std::string { return " (line " + std::to_string(node.source().begin.line) + ")"; }
 
 /** Reads the keys of one [section] and remembers which keys it asked for. */
 class SectionReader {
@@ -134,8 +132,7 @@ class SectionReader {
 };
 
 auto FromTable(const toml::table &root) -> EngineConfig {
-  static constexpr std::array<std::string_view, 5> kSections{"storage", "buffer_pool", "index", "transaction",
-                                                              "wal"};
+  static constexpr std::array<std::string_view, 5> kSections{"storage", "buffer_pool", "index", "transaction", "wal"};
   for (const auto &[key, node] : root) {
     bool known = false;
     for (const auto section : kSections) {

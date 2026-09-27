@@ -1,0 +1,27 @@
+# Advisory checks; enable with -DMINITUB_CLANG_TIDY=ON. Not a CI gate yet.
+Checks: >
+  -*,
+  bugprone-*,
+  -bugprone-easily-swappable-parameters,
+  clang-analyzer-*,
+  -clang-analyzer-optin.core.EnumCastOutOfRange,
+  concurrency-*,
+  cppcoreguidelines-slicing,
+  cppcoreguidelines-virtual-class-destructor,
+  misc-unused-*,
+  modernize-*,
+  -modernize-use-nodiscard,
+  performance-*,
+  -performance-enum-size,
+  readability-braces-around-statements,
+  readability-identifier-naming,
+  readability-inconsistent-declaration-parameter-name
+HeaderFilterRegex: '/(src|test|bench)/'  # leading / skips _deps/*-src/
+CheckOptions:
+  - { key: readability-identifier-naming.ClassCase,           value: CamelCase }
+  - { key: readability-identifier-naming.StructCase,          value: CamelCase }
+  - { key: readability-identifier-naming.EnumCase,            value: CamelCase }
+  - { key: readability-identifier-naming.FunctionCase,        value: CamelCase }
+  - { key: readability-identifier-naming.MethodCase,          value: CamelCase }
+  - { key: readability-identifier-naming.PrivateMemberCase,   value: lower_case }
+  - { key: readability-identifier-naming.PrivateMemberSuffix, value: _ }

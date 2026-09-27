@@ -1,0 +1,7 @@
+# Google style with a wider line limit (the same shape BusTub uses).
+BasedOnStyle: Google
+ColumnLimit: 120
+DerivePointerAlignment: false
+PointerAlignment: Right
+# Keep include groups exactly as written (own header, std, third-party, project).
+IncludeBlocks: Preserve

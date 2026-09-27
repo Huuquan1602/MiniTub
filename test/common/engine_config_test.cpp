@@ -120,8 +120,6 @@ TEST(EngineConfigTest, RejectsNonPositiveNumbers) {
 
 TEST(EngineConfigTest, RejectsSyntaxErrors) { ExpectConfigError("[storage\n", "cannot parse config"); }
 
-TEST(EngineConfigTest, RejectsMissingFile) {
-  EXPECT_THROW(EngineConfig::FromFile("does/not/exist.toml"), Exception);
-}
+TEST(EngineConfigTest, RejectsMissingFile) { EXPECT_THROW(EngineConfig::FromFile("does/not/exist.toml"), Exception); }
 
 }  // namespace minitub
