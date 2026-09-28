@@ -11,6 +11,7 @@ enum class ExceptionType {
   OutOfRange,      // index or value out of range
   NotImplemented,  // feature not built yet
   Config,          // bad EngineConfig input
+  Io,              // file or disk I/O failure
 };
 
 constexpr auto ExceptionTypeToString(ExceptionType type) -> std::string_view {
@@ -23,6 +24,8 @@ constexpr auto ExceptionTypeToString(ExceptionType type) -> std::string_view {
       return "NotImplemented";
     case ExceptionType::Config:
       return "Config";
+    case ExceptionType::Io:
+      return "Io";
   }
   return "Unknown";
 }
