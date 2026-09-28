@@ -4,7 +4,9 @@
 #include <cstddef>
 #include <cstdint>
 #include <filesystem>
+#include <mutex>
 #include <span>
+#include <unordered_set>
 
 #include "common/config.h"
 #include "common/engine_config.h"
@@ -51,7 +53,16 @@ class DiskManager {
   std::atomic<std::uint64_t> num_reads_{0};
   std::atomic<std::uint64_t> num_writes_{0};
 
-  // TODO(M1): your members (file descriptor, page count, latch, ...).
+  std::filesystem::path path_;  // kept for error messages
+  int fd_{-1};                  // POSIX file descriptor from open()
+
+  // Pages [0, num_pages_) exist in the file. Atomic so ReadPage/WritePage/NumPages can
+  // check it without taking the latch; only AllocatePage changes it (under latch_).
+  std::atomic<page_id_t> num_pages_{0};
+
+  // Serializes AllocatePage (read count, grow file, bump count) and guards deallocated_.
+  std::mutex latch_;
+  std::unordered_set<page_id_t> deallocated_;  // M1: recorded only, never reused
 };
 
 }  // namespace minitub
