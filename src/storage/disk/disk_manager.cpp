@@ -5,6 +5,7 @@
 #include <unistd.h>    // pread, pwrite, ftruncate, close
 
 #include <cerrno>
+#include <limits>
 #include <string>
 #include <system_error>
 
@@ -98,6 +99,9 @@ void DiskManager::WritePage(page_id_t page_id, std::span<const std::byte, PAGE_S
       }
       ThrowIo("cannot write page " + std::to_string(page_id) + " of", path_);  // e.g. ENOSPC: disk full
     }
+    if (n == 0) {
+      throw Exception(ExceptionType::Io, "write made no progress for page " + std::to_string(page_id));
+    }
     done += static_cast<std::size_t>(n);
   }
   num_writes_++;
@@ -109,13 +113,17 @@ auto DiskManager::AllocatePage() -> page_id_t {
   // Read-grow-publish must be one step, or two threads could get the same id.
   std::scoped_lock lock(latch_);
   const page_id_t page_id = num_pages_.load();
+  if (page_id == std::numeric_limits<page_id_t>::max()) {
+    throw Exception(ExceptionType::OutOfRange, "database has reached the maximum page count");
+  }
+  const page_id_t next_page_count = page_id + 1;
   // ftruncate extends the file with zeros, so a new page reads back as zeros.
-  if (::ftruncate(fd_, PageOffset(page_id + 1)) != 0) {
+  if (::ftruncate(fd_, PageOffset(next_page_count)) != 0) {
     ThrowIo("cannot grow", path_);
   }
   // Publish the new count only after the file really is longer, so a reader that sees
   // page_id as valid can also read its bytes.
-  num_pages_.store(page_id + 1);
+  num_pages_.store(next_page_count);
   return page_id;
 }
 
