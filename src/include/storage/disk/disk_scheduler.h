@@ -2,6 +2,10 @@
 
 #include <cstddef>
 #include <future>
+#include <memory>
+#include <optional>
+#include <thread>
+#include <vector>
 
 #include "common/channel.h"
 #include "common/config.h"
@@ -34,7 +38,14 @@ class DiskScheduler {
   void Schedule(DiskRequest request);
 
  private:
-  // TODO(M1): your members (disk manager, one Channel<std::optional<DiskRequest>> per worker, threads, ...).
+  /** Body of worker thread `worker`: runs requests from its queue until it receives std::nullopt. */
+  void RunWorker(std::size_t worker);
+
+  DiskManager *disk_manager_;
+  // One queue per worker; std::nullopt is the stop signal. unique_ptr because Channel can be
+  // neither copied nor moved, which std::vector would need when it grows.
+  std::vector<std::unique_ptr<Channel<std::optional<DiskRequest>>>> queues_;
+  std::vector<std::thread> workers_;
 };
 
 }  // namespace minitub
